@@ -11,12 +11,12 @@
 
     </style>
     <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
-    <script type="text/javascript" src="jsexp.exp.js"></script>
+    <script type="text/javascript" src="exp.js"></script>
 
     <script type="text/javascript">
         $(document).ready(function(){
 
-            $('#canvas').jsexpexp({
+            $('#canvas').jsbExp({
                 
                 fields: [{
                     id: 'AccountNumber', 
@@ -43,7 +43,7 @@
                     }]
                 }],
                 onChange: function () {
-                    var formula = $(this).jsexpexp('getExpression');
+                    var formula = $(this).jsbExp('getExpression');
                     $('#result1').html(formula);
                     try {
                         var result;
@@ -69,7 +69,7 @@
 
 <div id="result2"></div>
 
-<div class="jsexpexp">
+<div class="jsb-exp">
     <div class="list">
         <a href="#">Fields</a>, <a href="#">Concatenate</a>
     </div>
