@@ -1,0 +1,80 @@
+<html>
+
+<head>
+    <link rel="stylesheet" href="jsexp.exp.css"/>
+    <style type="text/css">
+        body {
+            font-size: 14px;
+            padding: 15px;
+            font-family: sans-serif;
+        }
+
+    </style>
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script type="text/javascript" src="jsexp.exp.js"></script>
+
+    <script type="text/javascript">
+        $(document).ready(function(){
+
+            $('#canvas').jsexpexp({
+                
+                fields: [{
+                    id: 'AccountNumber', 
+                    name: 'Account Number', 
+                    type: 'string'
+                },{
+                    id: 'ClosingDate', 
+                    name: 'Closing Date', 
+                    type: 'date'
+                },{
+                    id: 'RequestedAmount',
+                    name: 'Requested Amount',
+                    type: 'money'
+                },{
+                    id: 'SubProductId',
+                    name: 'Sub Product',
+                    type: 'integer', 
+                    values: [{
+                        value: 1,
+                        display: 'Credit Card'
+                    },{
+                        value: 2,
+                        display: 'Auto Loan'
+                    }]
+                }],
+                onChange: function () {
+                    var formula = $(this).jsexpexp('getExpression');
+                    $('#result1').html(formula);
+                    try {
+                        var result;
+                        eval('result = ' + formula);
+                        $('#result2').html(result);
+                    } catch (e) {
+                        $('#result2').html(e);
+                    }
+                }   
+            })
+        });
+
+    </script>
+</head>
+<body>
+
+<div id="canvas"></div>
+
+<br/><br/>
+
+<div id="result1"></div>
+
+
+<div id="result2"></div>
+
+<div class="jsexpexp">
+    <div class="list">
+        <a href="#">Fields</a>, <a href="#">Concatenate</a>
+    </div>
+</div>
+
+</body>
+
+</html>
