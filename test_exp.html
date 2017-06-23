@@ -1,7 +1,7 @@
 <html>
 
 <head>
-    <link rel="stylesheet" href="jsexp.exp.css"/>
+    <link rel="stylesheet" href="exp.css"/>
     <style type="text/css">
         body {
             font-size: 14px;
@@ -45,12 +45,16 @@
                 onChange: function () {
                     var formula = $(this).jsbExp('getExpression');
                     $('#result1').html(formula);
-                    try {
-                        var result;
-                        eval('result = ' + formula);
-                        $('#result2').html(result);
-                    } catch (e) {
-                        $('#result2').html(e);
+                    if (formula) {
+                        try {
+                            var result;
+                            eval('result = ' + formula);
+                            $('#result2').html(result);
+                        } catch (e) {
+                            $('#result2').html(e);
+                        }
+                    } else {
+                        $('#result2').html('');
                     }
                 }   
             })
@@ -63,12 +67,11 @@
 <div id="canvas"></div>
 
 <br/><br/>
-
+<hr>
 <div id="result1"></div>
-
-
+<hr>
 <div id="result2"></div>
-
+<hr>
 <div class="jsb-exp">
     <div class="list">
         <a href="#">Fields</a>, <a href="#">Concatenate</a>

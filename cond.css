@@ -1,0 +1,65 @@
+
+
+	.jsexp .rule-group {
+		padding: 20px;
+		margin: 20px 0;
+		border: 1px solid #eee;
+		border-left-width: 5px;
+		border-radius: 3px;
+		border-left-color: #428bca;
+	}
+
+	.jsexp .add-rule-wrap {
+		margin-top: 15px;
+	}
+
+    
+	.jsexp .rule span {
+		margin-right: 5px;
+	}
+	.jsexp .rule-group-condition:hover, .rule .condition:hover, .jsexp .rule .field:hover, .jsexp .rule .relation:hover, .jsexp .rule .value:hover {
+		border-bottom: solid 1px black;
+		cursor: pointer;
+	}
+	.jsexp .rule .field, .jsexp .rule .value {
+		font-weight: bold;
+	}
+	
+	.jsexp .list {
+		display:none;
+		position: absolute;
+		z-index: 999999;
+		background-color: #eeeeee;
+		border-radius: 4px;
+		padding: 10px;
+	}
+	.jsexp .list .item {
+		border-bottom: solid 1px #eeeeee;
+		cursor: pointer;
+		margin-bottom: 5px;	
+	}
+	.jsexp .list .item:hover {
+		border-bottom: solid 1px black;
+	}
+	.jsexp .delete-rule {
+		padding-right: 30px;
+	}
+
+	.jsexp .value-dialog .change-value-wrap {
+		padding-top: 10px;
+	}
+
+	.jsexp .value-dialog .value2-and {
+		padding: 10px 0px 10px 0px;
+	}
+
+	.jsexp .value-dialog .lookup div {
+		padding: 5px;
+	}
+
+	.jsexp .value-dialog .lookup label {
+		padding-left: 10px;
+	}
+	.jsexp .output {
+		color: #bbbbbb;
+	}

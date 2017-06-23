@@ -1,14 +1,15 @@
-.jsb-exp input {
+.jsb-exp .input {
     font-size: 1.2em;
     /*border-bottom: solid 1px black;*/
     min-width: 20px;
     min-height: 1px;    
     display: inline-block;
-    margin-right:3px;
+    margin-right:1px;
     cursor: pointer;
     text-align: center;
+    padding: 3px;
 }
-
+  
 .jsb-exp .input:focus {
     background-color: #eeeeee;
 }
@@ -26,7 +27,7 @@
     padding: 10px;
 }
 
-.jsb-exp .list {
+.jsb-expzzz .list {
     display:block;
     position:relative;
 }
