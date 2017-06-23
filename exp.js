@@ -227,7 +227,7 @@
         }
     };
 
-    $.fn.jsexpexp = function (methodOrOptions) {
+    $.fn.jsbExp = function (methodOrOptions) {
         
         if (methods[methodOrOptions]) {
             return methods[methodOrOptions].apply(this, Array.prototype.slice.call(arguments, 1));
