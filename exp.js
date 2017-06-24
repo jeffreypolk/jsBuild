@@ -2,11 +2,11 @@
 (function ($) {
 
     var _tests = {
-        allValidKeys: new RegExp("^[()+-//*0-9\.fF]+$"),
+        allValidKeys: new RegExp("^[()+-//*0-9\.=]+$"),
         operator: new RegExp("^[+-//*]+$"),
-        value: new RegExp("^[0-9\.fF]+$"),
+        value: new RegExp("^[0-9\.=]+$"),
         parens: new RegExp("^[()]+$"),
-        exp: new RegExp("^=$")
+        functions: new RegExp("^=$")
     }
     var _optionsStoreName = 'options-store';
 
@@ -18,9 +18,45 @@
         elem.data(_optionsStoreName, options);
     }
 
+    var _hideLists = function (elem) {
+        // hide all lists
+        elem.closest('.jsb-exp').find('.list').hide();
+    }
+
+    var _buildFunctionEditor = function (options) {
+        var html = [];
+        html.push('<div class="list function-editor">');
+        html.push('<div class="name"></div>');
+        html.push('<div class="description"></div>');
+        html.push('<hr><div class="canvas"></div>');
+        html.push('<hr><div class="actions"><a class="editor-update" href="#">Update</a>&nbsp;&nbsp;<a class="editor-cancel" href="#">Cancel</a></div></div>')
+        return html.join('');
+    }
+
+    var _buildFunctionHelper =  function (options) {
+        var ret = {};
+        var html = [];
+
+        // field selector
+        html = [];
+        html.push('<div><select class="field-selector">')
+        $.each(options.fields, function (index, item) {
+            html.push('<option value="', item.id, '">', item.name, '</option>');
+        });
+        html.push('</select></div>');
+        ret.fieldSelectorHtml = html.join('');
+        
+        // fields
+        ret.fields = options.fields;
+
+        return ret;    
+    }
+
     var _init = function (elem, options) {
         var html = [];
         options.container = elem;
+        options.functionHelper = _buildFunctionHelper(options);
+        html.push(_buildFunctionEditor(options));
         html.push('<div class="input" tabindex="0">0</div>');
         elem.addClass('jsb-exp');
         $(html.join('')).appendTo(elem);
@@ -30,11 +66,26 @@
 
     var _applyHandlers = function (elem, options) {
 
+        // handler for all keystrokes in input divs
         elem.on('keydown', '.input', function (event) {
             var elem = $(this);
             var key = _normalizeKey(event);
             _keyDown(elem, options, event, key);
         });
+
+        // handler for clicking on fields/functions
+        elem.on('click', '.function-list .item', function (event) {
+            _selectFieldFunction($(this), options);
+        });
+
+        // handler for canceling function editor
+        elem.on('click', '.editor-cancel', function (event) {
+            var editor = elem.find('.function-editor');
+            editor.hide();
+            // focus initiator
+            editor.data('initiator').focus();
+        });
+
     }
 
     var _normalizeKey = function (event) {
@@ -42,15 +93,18 @@
         var key;
         var keyCode = event.keyCode || event.which;
         if (keyCode === 9) {
+            // tab
             if (event.shiftKey) {
-                key = 'SHIFTTAB';
+                key = 'PREV';
             } else {
-                key = 'TAB';
+                key = 'NEXT';
             }
         } else if (keyCode === 37) {
-            key = 'LEFT';
-        } else if (keyCode === 39) {
-            key = 'RIGHT';
+            // left arrow
+            key = 'PREV';
+        } else if (keyCode === 39 || keyCode === 13) {
+            // right arrow, enter
+            key = 'NEXT';
         } else {
             key = String.fromCharCode(!event.charCode ? event.which : event.charCode);
             //console.log(event.which);
@@ -65,14 +119,9 @@
                     key = '-';
                     break;
                 case 187:
+                    key = '='
                     if (event.shiftKey)
                         key = '+';
-                    break;
-                case 107:
-                    key = '+';
-                    break;
-                case 106:
-                    key = '*';
                     break;
                 case 56:
                     if (event.shiftKey)
@@ -97,6 +146,51 @@
                     break;
                 case 116:
                     key = 'REFRESH';
+                    break;
+                case 96:
+                    key = '0';
+                    break;
+                case 97:
+                    key = '1';
+                    break;
+                case 98:
+                    key = '2';
+                    break;
+                case 99:
+                    key = '3';
+                    break;
+                case 100:
+                    key = '4';
+                    break;
+                case 101:
+                    key = '5';
+                    break;
+                case 102:
+                    key = '6';
+                    break;
+                case 103:
+                    key = '7';
+                    break;
+                case 104:
+                    key = '8';
+                    break;
+                case 105:
+                    key = '9';
+                    break;
+                case 106:
+                    key = '*';
+                    break;
+                case 107:
+                    key = '+';
+                    break;
+                case 109:
+                    key = '-';
+                    break;
+                case 110:
+                    key = '.';
+                    break;
+                case 111:
+                    key = '/';
                     break;
             }
         }
@@ -125,10 +219,12 @@
             return;
         }
 
-        if (key === 'TAB' || key === 'SHIFTTAB' || key === 'LEFT' || key === 'RIGHT') {
+        _hideLists(elem);
+
+        if (key === 'PREV' || key === 'NEXT') {
             // this is navigation
             event.preventDefault();
-            if (key === 'SHIFTTAB' || key === 'LEFT') {
+            if (key === 'PREV') {
                 _prev(elem);
             } else {
                 _next(elem);
@@ -175,8 +271,11 @@
                 return;
             }
 
-            if (_tests.exp.test(key)) {
-                alert('open expression');
+            if (_tests.functions.test(key)) {
+                // open functions
+                event.preventDefault();
+                _showFunctionList(elem, options);
+                return;
             } else {
                 if (_tests.value.test(elem.html()) && (_tests.operator.test(key) || _tests.parens.test(key))) {
                     // we're in value, but entered operator/paren
@@ -207,6 +306,82 @@
         }
     }
 
+    var _showFunctionList = function (elem, options) {
+        //debugger;
+        if (options.container.find('.function-list').length === 0) {
+            var html = [];
+            html.push('<div class="list function-list">');
+            html.push('<fieldset><legend>Fields</legend>');
+            $.each(options.fields, function (index, field) {
+                html.push('<div><span class="item" data-type="field" data-fieldid="', field.id, '">', field.name, '</span></div>');
+            });
+            html.push('</fieldset><br/><br/>');
+            html.push('<fieldset><legend>Functions</legend>');
+            $.each($.fn.jsbExp.functions, function (index, fn) {
+                html.push('<div><span class="item" data-type="function" data-name="', fn.name, '" title="', fn.description, '">', fn.name, '</span></div>');
+            });
+            html.push('</fieldset>');
+            html.push('</div>');
+            $(html.join('')).prependTo(options.container);
+        }
+        // show the list
+        options.container.find('.function-list').data('initiator', elem).css({'top':elem.offset().top + elem.height() + 10, 'left':elem.offset().left}).fadeIn();
+    }
+
+    var _showFunctionEditor = function (elem, fn, options) {
+        //debugger;
+        var editor = options.container.find('.function-editor');
+        editor.find('.name').html(fn.name);
+        editor.find('.description').html(fn.description);
+        var canvas = editor.find('.canvas');
+        canvas.empty();
+        fn.edit(canvas, options.functionHelper, {});
+        // show the list
+        editor.data('initiator', elem).css({'top':elem.offset().top + elem.height() + 10, 'left':elem.offset().left}).fadeIn();
+    }
+
+    var _selectFieldFunction = function (elem, options) {
+        _hideLists(elem);
+        var initiator = elem.closest('.function-list').data('initiator');
+        if (elem.data('type') === 'field') {
+            var field = _getFieldById(options, elem.data('fieldid'));
+            initiator.data('type', 'field');
+            initiator.data('fieldid', field.id);
+            initiator.html(field.name);
+        } else {
+            // this is a function
+            var fn = _getFunctionByName(elem.data('name'));
+            //initiator.empty();
+            _showFunctionEditor(initiator, fn, options);
+        }
+    }
+
+    var _getFieldById = function (options, fieldId) {
+        //debugger;
+        var field = {};
+        $.each(options.fields, function(index, item) {
+            if (item.id === fieldId) {
+                field = item;
+                return false;
+            }
+        });
+        return field;
+    }
+
+    var _getFunctionByName = function (name) {
+        //debugger;
+        var fn = {};
+        $.each($.fn.jsbExp.functions, function(index, item) {
+            if (item.name === name) {
+                fn = item;
+                return false;
+            }
+        });
+        return fn;
+    }
+
+    
+
     var methods = {
 
         init: function (options) {
@@ -233,7 +408,6 @@
         },
 
         getExpression: function () {
-            // do stuff
             var options = _getOptions($(this));
             var exp = [];
             $.each($(this).find('.input'), function (index, item) {
@@ -259,5 +433,8 @@
         }
     }
 
+    // define functions in exp.functions.js
+    // custom functions can be added by adding to this array by the client
+    $.fn.jsbExp.functions = [];
 
 }(jQuery));

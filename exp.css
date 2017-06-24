@@ -26,8 +26,11 @@
     border-radius: 4px;
     padding: 10px;
 }
-
-.jsb-expzzz .list {
-    display:block;
-    position:relative;
+.jsb-exp .list .item {
+    border-bottom: solid 1px #eeeeee;
+    cursor: pointer;
+    margin-bottom: 5px;	
+}
+.jsb-exp .list .item:hover {
+    border-bottom: solid 1px black;
 }
