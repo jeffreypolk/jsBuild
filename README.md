@@ -1,2 +1,2 @@
-# jsExpression
-HTML and JavaScript for building conditions and expressions 
+# jsBuild
+HTML and JavaScript for building conditions and expressions in JavaScript.
