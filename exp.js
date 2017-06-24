@@ -11,7 +11,11 @@
     var _optionsStoreName = 'options-store';
 
     var _getOptions = function (elem) {
-        return elem.data(_optionsStoreName);
+        if (elem.hasClass('jsb-exp')) {
+            return elem.data(_optionsStoreName); 
+        } else {
+            return elem.closest('.jsb-exp').data(_optionsStoreName);
+        }
     }
 
     var _setOptions = function (elem, options) {
@@ -26,7 +30,7 @@
     var _buildFunctionEditor = function (options) {
         var html = [];
         html.push('<div class="list function-editor">');
-        html.push('<div class="name"></div>');
+        html.push('<div><h4 class="name"></h4></div>');
         html.push('<div class="description"></div>');
         html.push('<hr><div class="canvas"></div>');
         html.push('<hr><div class="actions"><a class="editor-update" href="#">Update</a>&nbsp;&nbsp;<a class="editor-cancel" href="#">Cancel</a></div></div>')
@@ -35,19 +39,42 @@
 
     var _buildFunctionHelper =  function (options) {
         var ret = {};
-        var html = [];
 
-        // field selector
-        html = [];
-        html.push('<div><select class="field-selector">')
-        $.each(options.fields, function (index, item) {
-            html.push('<option value="', item.id, '">', item.name, '</option>');
-        });
-        html.push('</select></div>');
-        ret.fieldSelectorHtml = html.join('');
+        // field selector html
+        ret.getFieldSelectorHtml = function (selectedId, cls) {
+            var html = [];
+            html.push('<div><select class="form-control field-selector ', cls ? cls : '', '">');
+            $.each(options.fields, function (index, item) {
+                if (selectedId === item.id) {
+                    html.push('<option selected="selected" value="', item.id, '">', item.name, '</option>');
+                } else {
+                    html.push('<option value="', item.id, '">', item.name, '</option>');
+                }
+            });
+            html.push('</select></div>');
+            return html.join('');
+        }
         
-        // fields
-        ret.fields = options.fields;
+        // get selected field value
+        ret.getSelectedFieldId = function () {
+            return options.container.find('.function-editor .field-selector').val();
+        }
+
+        // get selected field object
+        ret.getSelectedField = function (container) {
+            var id = ret.getSelectedField();
+            return _getFieldById(id);
+        }
+
+        // get fields
+        ret.getFields = function () {
+            return options.fields;
+        } 
+
+        // get field
+        ret.getFieldById = function (fieldId) {
+            return _getFieldById(options, fieldId);
+        } 
 
         return ret;    
     }
@@ -56,11 +83,13 @@
         var html = [];
         options.container = elem;
         options.functionHelper = _buildFunctionHelper(options);
+        
         html.push(_buildFunctionEditor(options));
         html.push('<div class="input" tabindex="0">0</div>');
         elem.addClass('jsb-exp');
         $(html.join('')).appendTo(elem);
         _applyHandlers(elem, options);
+        options.functionEditor = options.container.find('.function-editor');
         elem.find('div.input').first().focus();
     }
 
@@ -73,17 +102,34 @@
             _keyDown(elem, options, event, key);
         });
 
+        // handler for clicking on input divs
+        elem.on('click', '.input', function (event) {
+            var elem = $(this);
+            if (elem.data('type') === 'fn') {
+                var options = _getOptions(elem)
+                var fn = _getFunctionByName(elem.data('name'));
+                _showFunctionEditor(elem, fn, options);
+            } else if (elem.data('type') === 'field') {
+                var options = _getOptions(elem);
+                _showFunctionList(elem, options);
+            }
+        });
+
         // handler for clicking on fields/functions
         elem.on('click', '.function-list .item', function (event) {
-            _selectFieldFunction($(this), options);
+            _selectFieldOrFunction($(this), options);
+        });
+
+        // handler for updating function editor
+        elem.on('click', '.editor-update', function (event) {
+            var options = _getOptions(elem);
+            _updateFunction(options);
         });
 
         // handler for canceling function editor
         elem.on('click', '.editor-cancel', function (event) {
-            var editor = elem.find('.function-editor');
-            editor.hide();
-            // focus initiator
-            editor.data('initiator').focus();
+            var options = _getOptions(elem);
+            _cancelFunctionEditor(options);
         });
 
     }
@@ -213,6 +259,12 @@
         return elem.prev().focus();
     }
 
+    var _triggerChange = function (options) {
+        if ($.isFunction(options.onChange)) {
+            options.onChange.call(options.container);
+        }
+    }
+
     var _keyDown = function (elem, options, event, key) {
         if (key === 'REFRESH') {
             window.location.href = window.location.href;
@@ -243,9 +295,7 @@
             }
             
             // change event
-            if ($.isFunction(options.onChange)) {
-                options.onChange.call(options.container);
-            }
+            _triggerChange(options);
 
         } else {
             // validate key and quit if bad
@@ -299,9 +349,7 @@
                 }
 
                 // change event
-                if ($.isFunction(options.onChange)) {
-                    options.onChange.call(options.container);
-                }
+                _triggerChange(options);
             }
         }
     }
@@ -333,14 +381,48 @@
         var editor = options.container.find('.function-editor');
         editor.find('.name').html(fn.name);
         editor.find('.description').html(fn.description);
+        editor.data('fn', fn);
+        editor.data('initiator', elem)
         var canvas = editor.find('.canvas');
         canvas.empty();
-        fn.edit(canvas, options.functionHelper, {});
+        var data = elem.data('functiondata') ? elem.data('functiondata') : {};
+        fn.edit(canvas, options.functionHelper, data);
         // show the list
-        editor.data('initiator', elem).css({'top':elem.offset().top + elem.height() + 10, 'left':elem.offset().left}).fadeIn();
+        editor.css({'top':elem.offset().top + elem.height() + 10, 'left':elem.offset().left}).fadeIn();
     }
 
-    var _selectFieldFunction = function (elem, options) {
+    var _closeFunctionEditor = function (options) {
+        options.functionEditor.hide();
+        options.functionEditor.data('fn', null);
+        options.functionEditor.find('.canvas').empty();
+    }
+
+    var _cancelFunctionEditor = function (options) {
+        _closeFunctionEditor(options)
+        // focus initiator
+        options.functionEditor.data('initiator').focus();
+    }
+
+    var _updateFunction = function (options) {
+        var editor = options.functionEditor;
+        var fn = editor.data('fn');
+        var initiator = editor.data('initiator'); 
+        var helper = options.functionHelper;
+        var data = initiator.data('functiondata') ? initiator.data('functiondata') : {};
+        if (fn.update(editor.find('.canvas'), helper, data)) {
+            initiator.data('type', 'fn');
+            initiator.data('name', fn.name);
+            initiator.data('functiondata', data);
+            initiator.empty();
+            fn.render(initiator, helper, data);
+            _closeFunctionEditor(options);
+            initiator.focus();
+            // change event
+            _triggerChange(options);
+        }
+    }
+    
+    var _selectFieldOrFunction = function (elem, options) {
         _hideLists(elem);
         var initiator = elem.closest('.function-list').data('initiator');
         if (elem.data('type') === 'field') {
@@ -348,10 +430,10 @@
             initiator.data('type', 'field');
             initiator.data('fieldid', field.id);
             initiator.html(field.name);
+            _triggerChange(options);
         } else {
             // this is a function
             var fn = _getFunctionByName(elem.data('name'));
-            //initiator.empty();
             _showFunctionEditor(initiator, fn, options);
         }
     }
@@ -407,14 +489,24 @@
 
         },
 
-        getExpression: function () {
+        getExpression: function (modelName) {
             var options = _getOptions($(this));
             var exp = [];
             $.each($(this).find('.input'), function (index, item) {
+                //debugger;
+                var elem = $(item);
                 if (exp.length > 0) {
                     exp.push(' ');
                 }
-                exp.push($(item).html())
+                if (elem.data('type') === 'field') {
+                    var field = _getFieldById(options, elem.data('fieldid'));
+                    exp.push(modelName + '.' + field.id);
+                } else if (elem.data('type') === 'fn') {
+                    var fn = _getFunctionByName(elem.data('name'));
+                    exp.push('function(){', fn.toFunction(modelName, options.functionHelper, elem.data('functiondata')), '}()');
+                } else {
+                    exp.push($(elem).html())
+                }
             });
             var formula = exp.join('');
             return formula;

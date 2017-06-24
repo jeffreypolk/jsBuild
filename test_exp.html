@@ -2,20 +2,48 @@
 
 <head>
     <title>jsb - Expression</title>
-    <link rel="stylesheet" href="exp.css"/>
     <style type="text/css">
-        body {
-            font-size: 14px;
-            padding: 15px;
-            font-family: sans-serif;
+        #canvas {
+            padding-top: 15px;
         }
 
     </style>
+    <link rel="stylesheet" href="exp.css"/>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
     <script type="text/javascript" src="exp.js"></script>
     <script type="text/javascript" src="exp.functions.js"></script>
 
     <script type="text/javascript">
+        var model = {
+            AccountNumber: '12345', 
+            ClosingDate: new Date('2017-04-01'), 
+            RequestedAmount: 25000, 
+            SubProductId: 2, 
+            formatDate: function (date) {
+                var day = ('0' + date.getDate()).slice(-2);
+                var month = ('0' + (date.getMonth() + 1)).slice(-2);
+                return date.getFullYear() + '-' + (month) + '-' + (day) ;
+            }
+        }
+
+        function evalExpression() {
+            var formula = $('#canvas').jsbExp('getExpression', 'model');
+            $('#result1').html(formula);
+            if (formula) {
+                try {
+                    var result;
+                    eval('result = ' + formula);
+                    $('#result2').html(result);
+                } catch (e) {
+                    $('#result2').html(e);
+                }
+            } else {
+                $('#result2').html('');
+            }
+        }
+
         $(document).ready(function(){
 
             $('#canvas').jsbExp({
@@ -45,35 +73,34 @@
                     }]
                 }],
                 onChange: function () {
-                    var formula = $(this).jsbExp('getExpression');
-                    $('#result1').html(formula);
-                    if (formula) {
-                        try {
-                            var result;
-                            eval('result = ' + formula);
-                            $('#result2').html(result);
-                        } catch (e) {
-                            $('#result2').html(e);
-                        }
-                    } else {
-                        $('#result2').html('');
-                    }
+                    evalExpression();
                 }   
             })
+
+            $('#txtAccountNumber').val(model.AccountNumber).change(function(){model.AccountNumber = $(this).val();evalExpression();});
+            $('#txtClosingDate').val(model.formatDate(model.ClosingDate)).change(function(){model.ClosingDate = $(this).val();evalExpression();});
+            $('#txtRequestedAmount').val(model.RequestedAmount).change(function(){model.RequestedAmount = $(this).val();evalExpression();});
+            $('#ddlSubProductId').val(model.SubProductId).change(function(){model.SubProductId = $(this).val();evalExpression();});
         });
 
     </script>
 </head>
 <body>
 
-<div id="canvas"></div>
+<div class="container">
+    <div id="canvas"></div>
 
-<br/><br/>
-<hr>
-<div id="result1"></div>
-<hr>
-<div id="result2"></div>
-<hr>
+    <br/>
+    <hr>
+    <label>Formula: </label><div id="result1"></div>
+    <hr>
+    <label>Result: </label><div id="result2"></div>
+    <hr>
+    <div><label>Account Number:</label> <input type="text" id="txtAccountNumber" class="form-control"/></div>
+    <div><label>Closing Date:</label> <input type="date" id="txtClosingDate" class="form-control"/></div>
+    <div><label>Requested Amount:</label> <input type="number" id="txtRequestedAmount" class="form-control"/></div>
+    <div><label>Sub Product:</label> <select id="ddlSubProductId" class="form-control"><option value="1">Credit Card</option><option value="2">Auto Loan</option></select></div>
+</div>
 
 </body>
 
