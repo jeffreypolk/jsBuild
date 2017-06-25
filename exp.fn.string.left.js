@@ -17,7 +17,13 @@ $.fn.jsbExp.functions.push({
         //container.html('left(field, 3)');
     }, 
     update: function (container, helper, data) {
-        data.fieldId = helper.getSelectedFieldId();
+        //debugger;
+        var field = helper.getSelectedField();
+        if (!container.find('.num-chars').val()) {
+            helper.error('Enter the Number of characters');
+            return false;
+        }
+        data.fieldId = field.id;
         data.numChars = container.find('.num-chars').val();
         return true;
     },

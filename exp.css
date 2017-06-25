@@ -34,3 +34,7 @@
 .jsb-exp .list .item:hover {
     border-bottom: solid 1px black;
 }
+
+.jsb-exp .function-editor .alert-danger {
+    display: none;
+}

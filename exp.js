@@ -33,7 +33,13 @@
         html.push('<div><h4 class="name"></h4></div>');
         html.push('<div class="description"></div>');
         html.push('<hr><div class="canvas"></div>');
-        html.push('<hr><div class="actions"><a class="editor-update" href="#">Update</a>&nbsp;&nbsp;<a class="editor-cancel" href="#">Cancel</a></div></div>')
+        html.push('<hr>');
+        html.push('<div class="alert alert-danger"></div>');
+        html.push('<div class="actions">');
+        html.push('<a class="editor-update" href="#">Update</a>&nbsp;&nbsp;');
+        html.push('<a class="editor-functions" href="#">Functions</a>&nbsp;&nbsp;');
+        html.push('<a class="editor-cancel" href="#">Cancel</a>');
+        html.push('</div></div>');
         return html.join('');
     }
 
@@ -57,13 +63,15 @@
         
         // get selected field value
         ret.getSelectedFieldId = function () {
-            return options.container.find('.function-editor .field-selector').val();
+            //debugger;
+            var id = options.functionEditor.find('.field-selector').val();
+            return id;
         }
 
         // get selected field object
         ret.getSelectedField = function (container) {
-            var id = ret.getSelectedField();
-            return _getFieldById(id);
+            var id = ret.getSelectedFieldId();
+            return _getFieldById(options, id);
         }
 
         // get fields
@@ -75,6 +83,11 @@
         ret.getFieldById = function (fieldId) {
             return _getFieldById(options, fieldId);
         } 
+
+        // set error message
+        ret.error = function(message) {
+            options.functionEditor.find('.alert-danger').html(message).fadeIn();
+        }
 
         return ret;    
     }
@@ -108,7 +121,11 @@
             if (elem.data('type') === 'fn') {
                 var options = _getOptions(elem)
                 var fn = _getFunctionByName(elem.data('name'));
-                _showFunctionEditor(elem, fn, options);
+                if (fn.edit) {
+                    _showFunctionEditor(elem, fn, options);
+                } else {
+                    _showFunctionList(elem, options);
+                }
             } else if (elem.data('type') === 'field') {
                 var options = _getOptions(elem);
                 _showFunctionList(elem, options);
@@ -124,6 +141,13 @@
         elem.on('click', '.editor-update', function (event) {
             var options = _getOptions(elem);
             _updateFunction(options);
+        });
+
+        // handler for exiting function and showing chooser
+        elem.on('click', '.editor-functions', function (event) {
+            var options = _getOptions(elem);
+            _closeFunctionEditor(options);
+            _showFunctionList(options.functionEditor.data('initiator'), options);
         });
 
         // handler for canceling function editor
@@ -393,6 +417,7 @@
 
     var _closeFunctionEditor = function (options) {
         options.functionEditor.hide();
+        options.functionEditor.find('.alert-danger').hide();
         options.functionEditor.data('fn', null);
         options.functionEditor.find('.canvas').empty();
     }
@@ -434,7 +459,20 @@
         } else {
             // this is a function
             var fn = _getFunctionByName(elem.data('name'));
-            _showFunctionEditor(initiator, fn, options);
+            if (fn.edit) {
+                _showFunctionEditor(initiator, fn, options);
+            } else {
+                // there is no editor
+                initiator.data('type', 'fn');
+                initiator.data('name', fn.name);
+                initiator.empty();
+                fn.render(initiator, options.functionHelper, {});
+                _closeFunctionEditor(options);
+                initiator.focus();
+                // change event
+                _triggerChange(options);
+            }
+            
         }
     }
 
