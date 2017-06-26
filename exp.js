@@ -32,9 +32,10 @@
         html.push('<div class="list function-editor">');
         html.push('<div><h4 class="name"></h4></div>');
         html.push('<div class="description"></div>');
-        html.push('<hr><div class="canvas"></div>');
         html.push('<hr>');
         html.push('<div class="alert alert-danger"></div>');
+        html.push('<div class="canvas"></div>');
+        html.push('<hr>');
         html.push('<div class="actions">');
         html.push('<a class="editor-update" href="#">Update</a>&nbsp;&nbsp;');
         html.push('<a class="editor-functions" href="#">Functions</a>&nbsp;&nbsp;');
@@ -98,7 +99,7 @@
         options.functionHelper = _buildFunctionHelper(options);
         
         html.push(_buildFunctionEditor(options));
-        html.push('<div class="input" tabindex="0">0</div>');
+        html.push('<div class="input" tabindex="0">1</div>');
         elem.addClass('jsb-exp');
         $(html.join('')).appendTo(elem);
         _applyHandlers(elem, options);
@@ -312,10 +313,12 @@
             // is the element already empty?
             if (!elem.html()) {
                 _keyDown(_prev(elem, options), options, event, 'DEL');
+                elem.remove();
                 return;
             } else {
                 // delete key...empty element
                 elem.empty();
+                elem.data('type', null);
             }
             
             // change event
@@ -382,17 +385,25 @@
         //debugger;
         if (options.container.find('.function-list').length === 0) {
             var html = [];
+            // build a helper function for rendering functions
+            var addFunctions = function (type) {
+                html.push('<div class="category">', type, 's</div>');
+                $.each($.fn.jsbExp.functions, function (index, item) {
+                    if (item.type === type.toLowerCase()) {
+                        html.push('<div><span class="item" data-type="function" data-name="', item.name, '" title="', item.description, '">', item.name, '</span></div>');
+                    }
+                });
+            }
             html.push('<div class="list function-list">');
-            html.push('<fieldset><legend>Fields</legend>');
+            html.push('<div class="category">Fields</div>');
             $.each(options.fields, function (index, field) {
                 html.push('<div><span class="item" data-type="field" data-fieldid="', field.id, '">', field.name, '</span></div>');
             });
-            html.push('</fieldset><br/><br/>');
-            html.push('<fieldset><legend>Functions</legend>');
-            $.each($.fn.jsbExp.functions, function (index, fn) {
-                html.push('<div><span class="item" data-type="function" data-name="', fn.name, '" title="', fn.description, '">', fn.name, '</span></div>');
-            });
-            html.push('</fieldset>');
+            // add functions by type
+            addFunctions('String');
+            addFunctions('Numeric');
+            addFunctions('Date');
+
             html.push('</div>');
             $(html.join('')).prependTo(options.container);
         }

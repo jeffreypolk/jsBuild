@@ -15,7 +15,7 @@
         elem.data(_optionsStoreName, options);
     }
 
-    var _getId = function () {
+    var _getId = function () {  
         //debugger;
         if (window.jsexpid >= 0) {
             window.jsexpid = window.jsexpid + 1;
@@ -274,7 +274,7 @@
 
     var _initRender = function (options) {
         var html = [];
-        html.push('<div class="jsexp">');
+        html.push('<div class="jsb-cond">');
         html.push('<div><a href="#" class="add-rulegroup">Add Group</a></div>');
         html.push(_buildRelationList());
         html.push(_buildFieldList(options));
@@ -320,7 +320,7 @@
 
     var _hideLists = function (elem) {
         // hide all lists
-        elem.closest('.jsexp').find('.list').hide();
+        elem.closest('.jsb-cond').find('.list').hide();
     }
 
     var _showRelationList = function (initiator) {
@@ -329,10 +329,10 @@
         _hideLists(initiator);
 
         // get options 
-        var options = _getOptions(initiator.closest('.jsexp').parent());
+        var options = _getOptions(initiator.closest('.jsb-cond').parent());
 
         // get list
-        var list = initiator.closest('.jsexp').find('.relation-list');
+        var list = initiator.closest('.jsb-cond').find('.relation-list');
         // show all relations
         list.find('.relation').show();
         
@@ -359,7 +359,7 @@
         _hideLists(initiator);
 
         // get options 
-        var options = _getOptions(initiator.closest('.jsexp').parent());
+        var options = _getOptions(initiator.closest('.jsb-cond').parent());
 
         // get the rule element from the initiator
         var ruleElem = initiator.closest('.rule');
@@ -368,7 +368,7 @@
         var rule = _getRuleById(options, ruleElem.data('ruleid'));
 
         // get dialog
-        var dialogElem = initiator.closest('.jsexp').find('.value-dialog');
+        var dialogElem = initiator.closest('.jsb-cond').find('.value-dialog');
 
         // set the rule id on elem for later use
         dialogElem.find('.change-value').data('ruleid', ruleElem.data('ruleid'));
@@ -454,7 +454,7 @@
         _hideLists(initiator);
 
         // get list
-        var list = initiator.closest('.jsexp').find('.field-list');
+        var list = initiator.closest('.jsb-cond').find('.field-list');
        
         // show the list
         list.data('initiator', initiator).css({'top':_mouseY + 10,'left':_mouseX}).fadeIn();
@@ -466,7 +466,7 @@
         _hideLists(initiator);
 
         // get options
-        var options = _getOptions(initiator.closest('.jsexp').parent());
+        var options = _getOptions(initiator.closest('.jsb-cond').parent());
         var group = {
             id: _getId(),
             condition: 'and',
@@ -486,7 +486,7 @@
         _hideLists(initiator);
 
         // get options
-        var options = _getOptions(initiator.closest('.jsexp').parent());
+        var options = _getOptions(initiator.closest('.jsb-cond').parent());
 
         // get group
         var group = _getRuleGroupById(options, initiator.closest('.rule-group').data('groupid'));
@@ -511,7 +511,7 @@
         var ruleId = initiator.data('ruleid');
 
         // get options
-        var options = _getOptions(initiator.closest('.jsexp').parent());
+        var options = _getOptions(initiator.closest('.jsb-cond').parent());
 
         // get the rule element
         var ruleElem = options.container.find('.rule[data-ruleid="' + ruleId + '"]');
@@ -606,10 +606,10 @@
         });
 
         // handler for clicking on an relation in the list
-        $('.jsexp .relation-list .relation').click(function() {
+        $('.jsb-cond .relation-list .relation').click(function() {
             var relation = $(this);
             var list = relation.parent();
-            var options = _getOptions(list.data('initiator').closest('.jsexp').parent());
+            var options = _getOptions(list.data('initiator').closest('.jsb-cond').parent());
             var ruleId = list.data('initiator').closest('.rule').data('ruleid');
 
             _changeRelation(options, ruleId, relation.data('code'));
@@ -618,10 +618,10 @@
         });
 
         // handler for clicking on an field in the list
-        $('.jsexp .field-list .field').click(function() {
+        $('.jsb-cond .field-list .field').click(function() {
             var field = $(this);
             var list = field.parent();
-            var options = _getOptions(list.data('initiator').closest('.jsexp').parent());
+            var options = _getOptions(list.data('initiator').closest('.jsb-cond').parent());
             var ruleId = list.data('initiator').closest('.rule').data('ruleid');
 
             _changeField(options, ruleId, field.data('fieldid'));
@@ -664,7 +664,7 @@
         var groupId = initiator.data('groupid');
 
         // get options
-        var options = _getOptions(initiator.closest('.jsexp').parent());
+        var options = _getOptions(initiator.closest('.jsb-cond').parent());
 
         // get the group
         var group = _getRuleGroupById(options, groupId);
@@ -706,7 +706,7 @@
         var ruleId = initiator.data('ruleid');
 
         // get options
-        var options = _getOptions(initiator.closest('.jsexp').parent());
+        var options = _getOptions(initiator.closest('.jsb-cond').parent());
 
         // get the rule
         var rule = _getRuleById(options, ruleId);
@@ -726,7 +726,7 @@
         var ruleId = initiator.data('ruleid');
 
         // get options
-        var options = _getOptions(initiator.closest('.jsexp').parent());
+        var options = _getOptions(initiator.closest('.jsb-cond').parent());
 
         // get the rule
         var rule = _getRuleById(options, ruleId);
@@ -804,7 +804,7 @@
         if (ruleElem.length > 0) {
             ruleElem.replaceWith($(html));
         } else {
-            $(html).insertBefore(options.container.find('.jsexp .rule-group[data-groupid="' + groupId + '"] .add-rule-wrap'));
+            $(html).insertBefore(options.container.find('.jsb-cond .rule-group[data-groupid="' + groupId + '"] .add-rule-wrap'));
         }
         _hideFirstCondition(options);
 
@@ -833,8 +833,8 @@
                 });
             });
             
-            // set the id prefix with the count of jsexp in the dom
-            _idPrefix = $('.jsexp').length;
+            // set the id prefix with the count of jsb-cond in the dom
+            _idPrefix = $('.jsb-cond').length;
 
             /*
             Example data:

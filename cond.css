@@ -1,6 +1,6 @@
 
 
-	.jsexp .rule-group {
+	.jsb-cond .rule-group {
 		padding: 20px;
 		margin: 20px 0;
 		border: 1px solid #eee;
@@ -9,23 +9,23 @@
 		border-left-color: #428bca;
 	}
 
-	.jsexp .add-rule-wrap {
+	.jsb-cond .add-rule-wrap {
 		margin-top: 15px;
 	}
 
     
-	.jsexp .rule span {
+	.jsb-cond .rule span {
 		margin-right: 5px;
 	}
-	.jsexp .rule-group-condition:hover, .rule .condition:hover, .jsexp .rule .field:hover, .jsexp .rule .relation:hover, .jsexp .rule .value:hover {
+	.jsb-cond .rule-group-condition:hover, .rule .condition:hover, .jsb-cond .rule .field:hover, .jsb-cond .rule .relation:hover, .jsb-cond .rule .value:hover {
 		border-bottom: solid 1px black;
 		cursor: pointer;
 	}
-	.jsexp .rule .field, .jsexp .rule .value {
+	.jsb-cond .rule .field, .jsb-cond .rule .value {
 		font-weight: bold;
 	}
 	
-	.jsexp .list {
+	.jsb-cond .list {
 		display:none;
 		position: absolute;
 		z-index: 999999;
@@ -33,33 +33,33 @@
 		border-radius: 4px;
 		padding: 10px;
 	}
-	.jsexp .list .item {
+	.jsb-cond .list .item {
 		border-bottom: solid 1px #eeeeee;
 		cursor: pointer;
 		margin-bottom: 5px;	
 	}
-	.jsexp .list .item:hover {
+	.jsb-cond .list .item:hover {
 		border-bottom: solid 1px black;
 	}
-	.jsexp .delete-rule {
+	.jsb-cond .delete-rule {
 		padding-right: 30px;
 	}
 
-	.jsexp .value-dialog .change-value-wrap {
+	.jsb-cond .value-dialog .change-value-wrap {
 		padding-top: 10px;
 	}
 
-	.jsexp .value-dialog .value2-and {
+	.jsb-cond .value-dialog .value2-and {
 		padding: 10px 0px 10px 0px;
 	}
 
-	.jsexp .value-dialog .lookup div {
+	.jsb-cond .value-dialog .lookup div {
 		padding: 5px;
 	}
 
-	.jsexp .value-dialog .lookup label {
+	.jsb-cond .value-dialog .lookup label {
 		padding-left: 10px;
 	}
-	.jsexp .output {
+	.jsb-cond .output {
 		color: #bbbbbb;
 	}

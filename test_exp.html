@@ -6,8 +6,74 @@
         #canvas {
             padding-top: 15px;
         }
-
+        .key {
+            font-style: italic;
+            /*color: #5cb85c;*/
+            font-weight: bold;
+        }
     </style>
+
+    <!-- bootstap callouts -->
+    <style type="text/css">
+        .bs-callout {
+            padding: 20px;
+            margin: 20px 0;
+            border: 1px solid #eee;
+            border-left-width: 5px;
+            border-radius: 3px;
+        }
+        .bs-callout h4 {
+            margin-top: 0;
+            margin-bottom: 5px;
+        }
+        .bs-callout p:last-child {
+            margin-bottom: 0;
+        }
+        .bs-callout code {
+            border-radius: 3px;
+        }
+        .bs-callout+.bs-callout {
+            margin-top: -5px;
+        }
+        .bs-callout-default {
+            border-left-color: #777;
+        }
+        .bs-callout-default h4 {
+            color: #777;
+        }
+        .bs-callout-primary {
+            border-left-color: #428bca;
+        }
+        .bs-callout-primary h4 {
+            color: #428bca;
+        }
+        .bs-callout-success {
+            border-left-color: #5cb85c;
+        }
+        .bs-callout-success h4 {
+            color: #5cb85c;
+        }
+        .bs-callout-danger {
+            border-left-color: #d9534f;
+        }
+        .bs-callout-danger h4 {
+            color: #d9534f;
+        }
+        .bs-callout-warning {
+            border-left-color: #f0ad4e;
+        }
+        .bs-callout-warning h4 {
+            color: #f0ad4e;
+        }
+        .bs-callout-info {
+            border-left-color: #5bc0de;
+        }
+        .bs-callout-info h4 {
+            color: #5bc0de;
+        }
+    </style>
+
+
     <link rel="stylesheet" href="exp.css"/>
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
     <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
@@ -82,6 +148,12 @@
             $('#txtClosingDate').val(model.formatDate(model.ClosingDate)).change(function(){model.ClosingDate = $(this).val();evalExpression();});
             $('#txtRequestedAmount').val(model.RequestedAmount).change(function(){model.RequestedAmount = $(this).val();evalExpression();});
             $('#ddlSubProductId').val(model.SubProductId).change(function(){model.SubProductId = $(this).val();evalExpression();});
+
+            evalExpression();
+
+            $('#btnFocus').click(function(){
+                $('.jsb-exp .input')[0].focus();
+            });
         });
 
     </script>
@@ -89,13 +161,28 @@
 <body>
 
 <div class="container">
-    <div id="canvas"></div>
+    <div>
+        
+
+        <div><a href="#" id="btnFocus">Focus the first element</a> or click on one</div>
+        <div>Use <span class="key">tab, shift-tab, arrows, mouse to navigate</span> </div>
+        <div><span class="key">delete, backspace</span> resets an element</div>
+        <div>The "<span class="key">=</span>" key shows the field/function menu</div>
+        
+        <div><span class="key"></span> </div>
+        
+    </div>
+
+    <div class="bs-callout bs-callout-success">
+            
+            <div id="canvas"></div>
+        </div>
+    
 
     <br/>
+    <label>Result: </label><div id="result2"></div>
     <hr>
     <label>Formula: </label><div id="result1"></div>
-    <hr>
-    <label>Result: </label><div id="result2"></div>
     <hr>
     <div><label>Account Number:</label> <input type="text" id="txtAccountNumber" class="form-control"/></div>
     <div><label>Closing Date:</label> <input type="date" id="txtClosingDate" class="form-control"/></div>
