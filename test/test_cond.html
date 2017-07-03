@@ -1,0 +1,137 @@
+<html>
+<head>
+    <title>jsb - Condition</title>
+
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+
+    <link rel="stylesheet" href="..\cond.css" />
+
+    <style type="text/css">
+        bodyz {
+            font-size: 18px;
+            padding: 15px;
+            font-family: sans-serif;
+        }
+    </style>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+
+    <script type="text/javascript" src="..\cond.js"></script>
+    <script type="text/javascript" src="model.js"></script>
+    <script type="text/javascript">
+
+        function evalExpression() {
+            var formula = $('#canvas').jsbCond('getExpression', 'model');
+            $('#result1').html(formula);
+            if (formula) {
+                try {
+                    var result;
+                    eval('result = ' + formula);
+                    $('#result2').html(result.toString());
+                } catch (e) {
+                    $('#result2').html(e);
+                }
+            } else {
+                $('#result2').html('');
+            }
+        }
+
+	    $(document).ready(function(){
+
+		    $('#canvas').jsbCond({
+			    fields: [{
+				    id: 'AccountNumber', 
+				    name: 'Account Number', 
+				    type: 'string'
+			    },{
+				    id: 'ClosingDate', 
+				    name: 'Closing Date', 
+				    type: 'date'
+			    },{
+				    id: 'RequestedAmount',
+				    name: 'Requested Amount',
+				    type: 'money'
+			    },{
+				    id: 'SubProductId',
+				    name: 'Sub Product',
+				    type: 'integer', 
+				    values: [{
+					    value: 1,
+					    display: 'Credit Card'
+				    },{
+					    value: 2,
+					    display: 'Auto Loan'
+				    }]
+			    }],
+			    rulesx: [{
+				    condition: 'and',
+				    field: 'RequestedAmount', 
+				    relation: 'GTEQ', 
+				    value: 50000
+			    },{
+				    condition: 'and',
+				    field: 'SubProductId', 
+				    relation: 'EQ', 
+				    value: 2
+			    }],
+
+			    rules: [{
+				    condition: 'and', 
+				    rules: [{
+					    condition: 'and',
+					    field: 'RequestedAmount', 
+					    relation: 'GTEQ', 
+					    value: 50000
+				    },{
+					    condition: 'and',
+					    field: 'SubProductId', 
+					    relation: 'EQ', 
+					    value: 2
+				    }]
+			    },{
+				    condition: 'and', 
+				    rules: [{
+					    condition: 'and',
+					    field: 'RequestedAmount', 
+					    relation: 'GTEQ', 
+					    value: 10000
+				    },{
+					    condition: 'and',
+					    field: 'SubProductId', 
+					    relation: 'EQ', 
+					    value: 1
+				    }]
+			    }],
+			    onChange: function () {
+			        evalExpression();
+			    }
+		    });
+
+		    evalExpression();
+	    });
+
+    </script>
+</head>
+
+<body>
+    <div class="container">
+
+        <div id="canvas"></div>
+
+        <br />
+        <label>Result: </label><div id="result2"></div>
+        <hr>
+        <label>Formula: </label><div id="result1"></div>
+        <hr>
+        <div><label>Account Number:</label> <input type="text" id="txtAccountNumber" class="form-control" /></div>
+        <div><label>Closing Date:</label> <input type="date" id="txtClosingDate" class="form-control" /></div>
+        <div><label>Requested Amount:</label> <input type="number" id="txtRequestedAmount" class="form-control" /></div>
+        <div><label>Sub Product:</label> <select id="ddlSubProductId" class="form-control"><option value="1">Credit Card</option><option value="2">Auto Loan</option></select></div>
+    </div>
+</body>	
+
+</html>
+
+

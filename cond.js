@@ -268,10 +268,6 @@
         return script.join('');
     }
 
-    var _updateOutput = function (options) {
-        options.container.find('.output').html(_buildScript(options, 'model'));
-    }
-
     var _initRender = function (options) {
         var html = [];
         html.push('<div class="jsb-cond">');
@@ -284,11 +280,9 @@
             html.push(_buildRuleGroup(options, group));
         });
         html.push('</div>');
-        html.push('<br/><div class="output"></div>');
         html.push('</div>');
         $(html.join('')).appendTo(options.container);
         _hideFirstCondition(options);
-        _updateOutput(options)
     };
 
     var _hideFirstCondition = function (options) {
@@ -478,6 +472,8 @@
         options.container.find('.rules').append($(_buildRuleGroup(options, group)));
         _hideFirstCondition(options);
         
+        // notify user
+        _triggerChange(options);
     };
 
     var _addRule = function (initiator) {
@@ -500,6 +496,9 @@
         };
         group.rules.push(rule);
         _renderRule(options, rule, group.id);
+
+        // notify user
+        _triggerChange(options);
     };
 
     var _deleteRule = function (initiator) {
@@ -540,13 +539,11 @@
             ruleElem.remove();
         }
         
-        
-        //if (groupElem)
-        // delete group if empty
-
         _hideFirstCondition(options);
 
-        _updateOutput(options);
+        // notify user
+        _triggerChange(options);
+
     };
 
     var _applyHandlers = function (options) {
@@ -675,8 +672,8 @@
         // change dom
         initiator.html(group.condition === 'and' ? 'And' : 'Or');
 
-        // update js
-        _updateOutput(options);
+        // notify user
+        _triggerChange(options);
     }
 
     var _changeRelation = function (options, ruleId, relation) {
@@ -684,7 +681,9 @@
         // get the rule
         var rule = _getRuleById(options, ruleId);
         rule.relation = relation;
-        _renderRule(options, rule);    
+        _renderRule(options, rule);
+        // notify user
+        _triggerChange(options);
     }
 
     var _changeField = function (options, ruleId, fieldId) {
@@ -695,7 +694,9 @@
         // reset the rule
         rule.relation = 'EQ';
         rule.value = null;
-        _renderRule(options, rule);    
+        _renderRule(options, rule);
+        // notify user
+        _triggerChange(options);
     }
 
     var _changeCondition = function (initiator) {
@@ -716,6 +717,9 @@
 
         // render
         _renderRule(options, rule);
+
+        // notify user
+        _triggerChange(options);
     }
 
     var _changeValue = function (initiator) {
@@ -756,6 +760,9 @@
         
         // render
         _renderRule(options, rule);
+
+        // notify user
+        _triggerChange(options);
     }
 
     var _getRuleGroupById = function (options, groupId) {
@@ -807,11 +814,13 @@
             $(html).insertBefore(options.container.find('.jsb-cond .rule-group[data-groupid="' + groupId + '"] .add-rule-wrap'));
         }
         _hideFirstCondition(options);
-
-        _updateOutput(options);
     }
 
-    
+    var _triggerChange = function (options) {
+        if ($.isFunction(options.onChange)) {
+            options.onChange.call(options.container);
+        }
+    }
 
     var methods = {
 
@@ -820,7 +829,8 @@
             // Establish our default settings
             var opt = $.extend({
                 fields: [], 
-                rules: []
+                rules: [],
+                onChange: null
             }, options);
 
             // make sure all rule groups have an id
@@ -891,7 +901,7 @@
             return options.rules;
         },
 
-        getScript: function (modelName) {
+        getExpression: function (modelName) {
             var options = _getOptions($(this));
             return _buildScript(options, modelName);
         }

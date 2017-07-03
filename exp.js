@@ -520,10 +520,11 @@
             // Establish our default settings
             var opt = $.extend({
                 fields: [],
-                items: []
+                items: [],
+                onChange: null
             }, options);
 
-            console.log(opt.fields)
+            //console.log(opt.fields)
             return this.each(function () {
 
                 // get ref
