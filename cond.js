@@ -15,16 +15,6 @@
         elem.data(_optionsStoreName, options);
     }
 
-    var _getId = function () {  
-        //debugger;
-        if (window.jsexpid >= 0) {
-            window.jsexpid = window.jsexpid + 1;
-        } else {
-            window.jsexpid = 0;
-        }
-        return 'jsexp' + window.jsexpid.toString();
-    }
-
     var _relations = ['EQ', 'NOTEQ', 'GT', 'GTEQ', 'LT', 'LTEQ', 'NULL', 'NOTNULL', 'BETWEEN'];
 
     var _relationWords = [];
@@ -59,18 +49,28 @@
 
     var _buildRuleGroup = function (options, group) {
         var html = [];
+        var expressions = [];
         html.push('<div class="rule-group-wrap" data-groupid="', group.id, '"><span class="rule-group-condition" data-groupid="', group.id, '">', group.condition === 'and' ? 'And' : 'Or', '</span>')
         html.push('<div class="rule-group" data-groupid="', group.id, '">')
+        var rulesToInit = [];
         $.each(group.rules, function (index2, rule) {
-            html.push(_buildRule(options, rule));
+            var ruleData = _buildRule(options, rule);
+            html.push(ruleData.html);
+            $.each(ruleData.expressions, function (index3, item3) {
+                expressions.push(item3);
+            });
         });
         html.push('<div class="add-rule-wrap"><a href="#" class="add-rule">Add Rule</a></div>');
         html.push('</div>')
         html.push('</div>')
-        return html.join('');
+        return {
+            html: html.join(''),
+            expressions: expressions
+        }
     }
 
     var _buildRule = function (options, rule) {
+        var expressions = [];
         /*
         <div class="rule">
             <span class="field">Requested Amount</span><span class="relation">is greater than</span><span class="value">50000</span>
@@ -93,61 +93,85 @@
         var html = [];
         html.push('<div class="rule" data-ruleid="', rule.id, '">');
         html.push('<a href="#" class="delete-rule" data-ruleid="', rule.id, '">Delete</a>'); 
-        html.push('<span class="condition" data-ruleid="', rule.id, '">', rule.condition, '</span>');
-        html.push('<span class="field" data-ruleid="', rule.id, '" data-fieldid="' + field.id + '">', field.name, '</span>');
-        html.push('<span class="relation" data-ruleid="', rule.id, '">', _relationWords[rule.relation], '</span>');
-        html.push('<span class="value" data-ruleid="', rule.id, '">');
+        html.push('<div class="condition" data-ruleid="', rule.id, '">', rule.condition, '</div>');
+        html.push('<div class="field" data-ruleid="', rule.id, '" data-fieldid="' + field.id + '">', field.name, '</div>');
+        html.push('<div class="relation" data-ruleid="', rule.id, '">', _relationWords[rule.relation], '</div>');
+        var valueElemId = $.fn.jsb.util.getIdString();
+        var valueExpElemId = $.fn.jsb.util.getIdString();
+        html.push('<div class="value" id="', valueElemId, '" data-ruleid="', rule.id, '">');
+        
         if (rule.relation === 'NULL' || rule.relation === 'NOTNULL') {
             // show no value
         } else {
             
-            var displayValue;
+            //// do we have an expression?
+            //if (rule.valueExp) {
 
-            if (field.values && field.values.length > 0) {
-                // show the lookup values
-                
-                var vals = [];
-                var displays = [];
+            //    // add this expression for initialization after the dom is updated
+            //    expressions.push({
+            //        valueDomId: valueElemId,
+            //        expressionDomId: valueExpElemId,
+            //        data: rule.valueExp
+            //    });
+            //} else {
 
-                // rule value might be a single value or a lookup
-                if ($.isArray(rule.value)) {
-                    vals = rule.value;
-                } else {
-                    vals = [rule.value];
-                }
-                //debugger;
-                
-                $.each(vals, function (index, ruleval) {
-                    $.each(field.values, function (index2, fieldval) {
-                        if (ruleval === fieldval.value) {
-                            displays.push(fieldval.display);
-                            return false;
-                        }
+                // render value
+                var displayValue;
+
+                if (field.values && field.values.length > 0) {
+                    // show the lookup values
+
+                    var vals = [];
+                    var displays = [];
+
+                    // rule value might be a single value or a lookup
+                    if ($.isArray(rule.value)) {
+                        vals = rule.value;
+                    } else {
+                        vals = [rule.value];
+                    }
+                    //debugger;
+
+                    $.each(vals, function (index, ruleval) {
+                        $.each(field.values, function (index2, fieldval) {
+                            if (ruleval === fieldval.value) {
+                                displays.push(fieldval.display);
+                                return false;
+                            }
+                        });
                     });
-                });
-                displayValue = displays.join(' or ');
+                    displayValue = displays.join(' or ');
 
-            } else {
-                // standard value
-                displayValue = rule.value ? rule.value : 'value';    
-            }
-
-            if (rule.relation === 'BETWEEN') {
-                // show the second value
-                debugger;
-                if (rule.value2) {
-                    displayValue = displayValue + ' and ' + rule.value2; 
                 } else {
-                    displayValue = displayValue + ' and value'; 
+                    // standard value
+                    displayValue = rule.value ? rule.value : 'value';
                 }
-            }
 
-            // set it
-            html.push('<span data-ruleid="', rule.id, '">', displayValue, '</span>');    
+                if (rule.relation === 'BETWEEN') {
+                    // show the second value
+                    //debugger;
+                    if (rule.value2) {
+                        displayValue = displayValue + ' and ' + rule.value2;
+                    } else {
+                        displayValue = displayValue + ' and value';
+                    }
+                }
+
+                // set it
+                html.push('<div data-ruleid="', rule.id, '">', displayValue, '</div>');
+            //}
         }
-        html.push('</span>');   
+
         html.push('</div>');
-        return html.join('');
+
+        // expression
+        html.push('<div class="value-exp" id="', valueExpElemId, '" data-ruleid="', rule.id, '"></div>');
+
+        html.push('</div>');
+        return {
+            html: html.join(''),
+            expressions: expressions
+        }
     };
 
     var _buildRelationList = function () {
@@ -177,8 +201,11 @@
         var html = [];
         html.push('<div class="list value-dialog">');
 
-        // single value
+        // standard values
         html.push('<div class="value-wrap">')
+
+        // single value
+        html.push('<div class="value1-wrap">')
         html.push('<input type="text" class="value value1"/>');
         html.push('</div>')
 
@@ -193,8 +220,17 @@
         // items supplied at runtime
         html.push('</div>');
 
+        html.push('</div>');
+
+
+        // expression 
+        html.push('<div class="exp-wrap">');
+        html.push('<div>Expression:</div>');
+        html.push('<div class="exp"></div>');
+        html.push('</div>');
+
         // update button
-        html.push('<div class="change-value-wrap"><a href="#" class="change-value" data-ruleid="">Set Value</a></div>')
+        html.push('<div class="value-dialog-toolbar"><a href="#" class="update" data-ruleid="">Update</a> | <a href="#" class="use-exp" data-ruleid="">Change to Expression</a><a href="#" class="use-value" data-ruleid="">Change to Value</a></div>')
         html.push('</div>');
         return html.join('');
     };
@@ -246,7 +282,15 @@
                         break;
 
                     default:
-                        if ($.isArray(rule.value)) {
+                        if (rule.valueExp) {
+                            // this is an expression
+                            var exp = $.fn.jsbExp.build({
+                                modelName: modelName,
+                                fields: options.fields,
+                                tokens: rule.valueExp.tokens
+                            });
+                            script.push(fullField + ' ' + _relationSymbols[rule.relation] + ' ' + exp.formula);
+                        } else if ($.isArray(rule.value)) {
                             // this an array of values
                             var temp = [];
                             $.each(rule.value, function (index2, item) {
@@ -270,6 +314,7 @@
 
     var _initRender = function (options) {
         var html = [];
+        var expressions = [];
         html.push('<div class="jsb-cond">');
         html.push('<div><a href="#" class="add-rulegroup">Add Group</a></div>');
         html.push(_buildRelationList());
@@ -277,11 +322,26 @@
         html.push(_buildValueDialog(options));
         html.push('<div class="rules">')
         $.each(options.rules, function (index, group) {
-            html.push(_buildRuleGroup(options, group));
+            var groupData = _buildRuleGroup(options, group);
+            html.push(groupData.html);
+            $.each(groupData.expressions, function (index2, item2) {
+                expressions.push(item2);
+            });
         });
         html.push('</div>');
         html.push('</div>');
         $(html.join('')).appendTo(options.container);
+        // activate all expressions
+        //debugger;
+        $.each(expressions, function (index, item) {
+            $('#' + item.expressionDomId).jsbExp({
+                fields: options.fields,
+                expression: item.data,
+                onChange: function () {
+                    $('#' + item.valueDomId).text($(this).jsbExp('getExpression').text);
+                }
+            })
+        });
         _hideFirstCondition(options);
     };
 
@@ -365,25 +425,31 @@
         var dialogElem = initiator.closest('.jsb-cond').find('.value-dialog');
 
         // set the rule id on elem for later use
-        dialogElem.find('.change-value').data('ruleid', ruleElem.data('ruleid'));
+        dialogElem.data('ruleid', ruleElem.data('ruleid'));
 
         // get the field
         var field = _getFieldById(options, rule.field);
 
+        // setup an expression for this
+        dialogElem.find('.exp').jsbExp({
+            fields: options.fields,
+            expression: rule.valueExp
+        });
+
         // get the value inputs
         var valueInputs = dialogElem.find('input.value');
-        
+
         // set the input based on field type
         if (_isFieldDate(field)) {
-            valueInputs.attr('type', 'date');     
+            valueInputs.attr('type', 'date');
         } else if (_isFieldNumeric(field)) {
-            valueInputs.attr('type', 'number');    
+            valueInputs.attr('type', 'number');
         } else {
-            valueInputs.attr('type', 'text');    
+            valueInputs.attr('type', 'text');
         }
 
         // set the value 1
-        dialogElem.find('.value-wrap').show();
+        dialogElem.find('.value1-wrap').show();
         dialogElem.find('.value1').val(rule.value);
 
         // between has special handling
@@ -401,7 +467,7 @@
         if (field.values && field.values.length > 0) {
 
             // hide the value fields
-            dialogElem.find('.value-wrap').hide();
+            dialogElem.find('.value1-wrap').hide();
 
             // do we already have a lookup for this field?
             if (lookupWrapElem.find('.lookup-' + field.id).length === 0) {
@@ -409,7 +475,7 @@
                 var html = [];
                 html.push('<div class="lookup lookup-', field.id, '">');
                 $.each(field.values, function (index, item) {
-                    var id = _getId();
+                    var id = $.fn.jsb.util.getIdString();
                     html.push('<div><input type="checkbox" id="', id, '" data-value="' + item.value + '"/>');
                     html.push('<label for="', id, '">', item.display, '</label></div>');
                 });
@@ -417,7 +483,7 @@
                 $(html.join('')).appendTo(lookupWrapElem);
             }
             var lookupElem = lookupWrapElem.find('.lookup-' + field.id);
-            
+
             //uncheck all boxes
             lookupElem.find('input[type="checkbox"]').prop('checked', false);
 
@@ -435,12 +501,49 @@
                 lookupElem.find('input[data-value="' + vals[i] + '"]').prop('checked', true);
             }
             lookupElem.show();
-        }       
+        }
 
         // show the dialog
-        dialogElem.data('initiator', initiator).css({'top':_mouseY + 10,'left':_mouseX}).fadeIn();
-        dialogElem.find('.value1').select();
+        if (rule.valueExp) {
+            // show the expression
+            dialogElem.data('usage', 'exp');
+            dialogElem.find('.value-wrap').hide();
+            dialogElem.find('.value-dialog-toolbar .use-exp').hide();
+            dialogElem.find('.value-dialog-toolbar .use-value').show();
+            dialogElem.find('.exp-wrap').show();
+        } else {
+            // show the normal value
+            dialogElem.data('usage', 'value');
+            dialogElem.find('.value-wrap').show();
+            dialogElem.find('.value-dialog-toolbar .use-exp').show();
+            dialogElem.find('.value-dialog-toolbar .use-value').hide();
+            dialogElem.find('.exp-wrap').hide();
+        }
+        dialogElem.data('initiator', initiator).css({ 'top': _mouseY + 10, 'left': _mouseX }).fadeIn();
+        if (rule.valueExp) {
+            // focus expression
+            dialogElem.find('.exp-wrap .exp .token').focus();
+        } else {
+            // select values
+            dialogElem.find('.value1').select();
+        }
+        
     };
+
+    var _toggleValueDialogUsage = function(elem, usage) {
+        var dialog = elem.closest('.value-dialog');
+        dialog.data('usage', usage);
+        dialog.find('.value-wrap').toggle();
+        dialog.find('.exp-wrap').toggle();
+        dialog.find('.use-exp').toggle();
+        dialog.find('.use-value').toggle();
+        if (usage === 'exp') {
+            // focus expression
+            dialog.find('.exp-wrap .exp .token').focus();
+        } else {
+            dialog.find('.value1').select();
+        }
+    }
 
     var _showFieldList = function (initiator) {
 
@@ -462,7 +565,7 @@
         // get options
         var options = _getOptions(initiator.closest('.jsb-cond').parent());
         var group = {
-            id: _getId(),
+            id: $.fn.jsb.util.getIdString(),
             condition: 'and',
             rules: []
         };
@@ -488,7 +591,7 @@
         var group = _getRuleGroupById(options, initiator.closest('.rule-group').data('groupid'));
 
         var rule = {
-            id: _getId(),
+            id: $.fn.jsb.util.getIdString(),
             condition: 'and',
             field: options.fields[0].id, // use the first field
             relation: 'EQ', 
@@ -578,7 +681,12 @@
 
         // handler for clicking value in all rules
         options.container.on('click', '.rule .value', function () {
-            _showValueDialog($(this));
+            if ($(this).hasClass('jsb-exp')) {
+                // do nothing - let expression builder handle it
+            } else {
+                _showValueDialog($(this));
+            }
+            
         });
 
         // handler for adding a rule
@@ -592,8 +700,16 @@
         });
 
         // handler updating value
-        options.container.on('click', '.change-value', function () {
+        options.container.on('click', '.value-dialog-toolbar .update', function () {
             _changeValue($(this));
+        });
+        // handler to use expression
+        options.container.on('click', '.value-dialog-toolbar .use-exp', function () {
+            _toggleValueDialogUsage($(this), 'exp');
+        });
+        // handler to use value
+        options.container.on('click', '.value-dialog-toolbar .use-value', function () {
+            _toggleValueDialogUsage($(this), 'value');
         });
 
         // handler for tracking mouse for showing dialogs
@@ -726,8 +842,11 @@
         // hide all lists
         _hideLists(initiator);
 
+        // get a ref to the value dialog
+        var dialogElem = initiator.closest('.value-dialog');
+
         // get rule id
-        var ruleId = initiator.data('ruleid');
+        var ruleId = dialogElem.data('ruleid');
 
         // get options
         var options = _getOptions(initiator.closest('.jsb-cond').parent());
@@ -738,24 +857,30 @@
         // get the field
         var field = _getFieldById(options, rule.field);
 
-        // get a ref to the value dialog
-        var dialogElem = initiator.closest('.value-dialog');
-
-        if (field.values && field.values.length > 0) {
-            // this field is a lookup
-            // go through all checkboxes and make an array
-            var vals = [];
-            $.each(dialogElem.find('.lookup-' + field.id).find('input[type="checkbox"]'), function (index, item) {
-                var elem = $(item);
-                if (elem.prop('checked')) {
-                    vals.push(elem.data('value'));
-                }
-            });
-            rule.value = vals;
+        if (dialogElem.data('usage') === 'exp') {
+            // this is an expression
+            rule.valueExp = dialogElem.find('.exp').jsbExp('getExpression');
+            rule.value = rule.valueExp.text;
+            
         } else {
-            // update the value
-            rule.value = dialogElem.find('.value1').val();
-            rule.value2 = dialogElem.find('.value2').val();
+            // normal values
+            rule.valueExp = null;
+            if (field.values && field.values.length > 0) {
+                // this field is a lookup
+                // go through all checkboxes and make an array
+                var vals = [];
+                $.each(dialogElem.find('.lookup-' + field.id).find('input[type="checkbox"]'), function (index, item) {
+                    var elem = $(item);
+                    if (elem.prop('checked')) {
+                        vals.push(elem.data('value'));
+                    }
+                });
+                rule.value = vals;
+            } else {
+                // update the value
+                rule.value = dialogElem.find('.value1').val();
+                rule.value2 = dialogElem.find('.value2').val();
+            }
         }
         
         // render
@@ -805,13 +930,13 @@
     }
 
     var _renderRule = function (options, rule, groupId) {
-        var html = _buildRule(options, rule);
+        var ruleData = _buildRule(options, rule);
         var ruleElem = options.container.find('.rule[data-ruleid="' + rule.id + '"]')
         //debugger;
         if (ruleElem.length > 0) {
-            ruleElem.replaceWith($(html));
+            ruleElem.replaceWith($(ruleData.html));
         } else {
-            $(html).insertBefore(options.container.find('.jsb-cond .rule-group[data-groupid="' + groupId + '"] .add-rule-wrap'));
+            $(ruleData.html).insertBefore(options.container.find('.jsb-cond .rule-group[data-groupid="' + groupId + '"] .add-rule-wrap'));
         }
         _hideFirstCondition(options);
     }
@@ -835,11 +960,11 @@
 
             // make sure all rule groups have an id
             $.each(opt.rules, function (index, group) {
-                group.id = group.id ? group.id : _getId();
+                group.id = group.id ? group.id : $.fn.jsb.util.getIdString();
                 
                 // make sure all rules have an id
                 $.each(group.rules, function (index2, rule) {
-                    rule.id = rule.id ? rule.id : _getId();
+                    rule.id = rule.id ? rule.id : $.fn.jsb.util.getIdString();
                 });
             });
             
@@ -896,14 +1021,13 @@
 
         }, 
 
-        getRules: function () {
+        getCondition: function (modelName) {
             var options = _getOptions($(this));
-            return options.rules;
-        },
-
-        getExpression: function (modelName) {
-            var options = _getOptions($(this));
-            return _buildScript(options, modelName);
+            var cond = {
+                rules: options.rules,
+                formula: _buildScript(options, modelName)
+            };
+            return cond;
         }
     };
 

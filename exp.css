@@ -1,4 +1,4 @@
-.jsb-exp .input {
+.jsb-exp .token {
     font-size: 1.2em;
     /*border-bottom: solid 1px black;*/
     min-width: 20px;
@@ -10,11 +10,11 @@
     padding: 3px;
 }
   
-.jsb-exp .input:focus {
+.jsb-exp .token:focus {
     background-color: #eeeeee;
 }
 
-.jsb-exp .input:hover {
+.jsb-exp .token:hover {
     background-color: #eeeeee;
 }
 
@@ -35,8 +35,16 @@
     border-bottom: solid 1px black;
 }
 
+.jsb-exp .function-editor {
+    min-width: 200px;
+}
+
 .jsb-exp .function-editor .alert-danger {
     display: none;
+}
+
+.jsb-exp .function-list {
+    min-width: 200px;
 }
 
 .jsb-exp .function-list .category {

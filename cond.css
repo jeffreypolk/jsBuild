@@ -14,8 +14,10 @@
 	}
 
     
-	.jsb-cond .rule span {
+	.jsb-cond .rule div {
+        display: inline-block;
 		margin-right: 5px;
+        border-bottom: solid 1px transparent;
 	}
 	.jsb-cond .rule-group-condition:hover, .rule .condition:hover, .jsb-cond .rule .field:hover, .jsb-cond .rule .relation:hover, .jsb-cond .rule .value:hover {
 		border-bottom: solid 1px black;
@@ -45,7 +47,7 @@
 		padding-right: 30px;
 	}
 
-	.jsb-cond .value-dialog .change-value-wrap {
+	.jsb-cond .value-dialog .value-dialog-toolbar {
 		padding-top: 10px;
 	}
 
@@ -63,3 +65,11 @@
 	.jsb-cond .output {
 		color: #bbbbbb;
 	}
+
+    .jsb-cond .value-dialog .exp {
+		background-color: #ffffff;
+        border-radius: 5px;
+        padding: 3px;
+	}
+
+    

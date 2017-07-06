@@ -37,8 +37,8 @@
         html.push('<div class="canvas"></div>');
         html.push('<hr>');
         html.push('<div class="actions">');
-        html.push('<a class="editor-update" href="#">Update</a>&nbsp;&nbsp;');
-        html.push('<a class="editor-functions" href="#">Functions</a>&nbsp;&nbsp;');
+        html.push('<a class="editor-update" href="#">Update</a>&nbsp;|&nbsp;');
+        html.push('<a class="editor-functions" href="#">Functions</a>&nbsp;|&nbsp;');
         html.push('<a class="editor-cancel" href="#">Cancel</a>');
         html.push('</div></div>');
         return html.join('');
@@ -94,30 +94,70 @@
     }
 
     var _init = function (elem, options) {
+
+        // remove all existing content
+        elem.empty();
+
         var html = [];
         options.container = elem;
         options.functionHelper = _buildFunctionHelper(options);
-        
+        options.tabIndex = $.fn.jsb.util.getId() + 500;
         html.push(_buildFunctionEditor(options));
-        html.push('<div class="input" tabindex="0">1</div>');
+
+        // we need to make refs to fns and go back through them after the DOM is updated
+        var fnArr = [];
+
+        if (options.expression && options.expression.tokens && options.expression.tokens.length > 0) {
+            $.each(options.expression.tokens, function (index, item) {
+                var id = $.fn.jsb.util.getIdString();
+                options.tabIndex += 1;
+                if (item.type === 'literal') {
+                    html.push('<div class="token" id="', id, '" tabindex="', options.tabIndex, '" data-type="literal">', item.value, '</div>');
+                } else if (item.type === 'field') {
+                    html.push('<div class="token" id="', id, '" tabindex="', options.tabIndex, '" data-type="field" data-fieldid="', item.fieldId, '">', item.value, '</div>');
+                } else if (item.type === 'fn') {
+                    var fn = _getFunctionByName(item.name);
+                    fnArr.push({
+                        id: id,
+                        fn: fn,
+                        data: item.data
+                    })
+                    html.push('<div class="token" id="', id, '" tabindex="', options.tabIndex, '" data-type="fn" data-name="', item.name, '"></div>');
+                }
+                
+            });
+        } else {
+            html.push('<div class="token" tabindex="', options.tabIndex, '"></div>');
+        }
         elem.addClass('jsb-exp');
         $(html.join('')).appendTo(elem);
+
+        // now that everything is in the dom, attach/render functions
+        $.each(fnArr, function (index, item) {
+            var elem = $('#' + item.id);
+            // add data
+            elem.data('functiondata', item.data);
+            // render
+            item.fn.render(elem, options.functionHelper, item.data);
+        });
+        //console.log(fnArr);
+
         _applyHandlers(elem, options);
         options.functionEditor = options.container.find('.function-editor');
-        elem.find('div.input').first().focus();
+        elem.find('div.token').first().focus();
     }
 
     var _applyHandlers = function (elem, options) {
 
-        // handler for all keystrokes in input divs
-        elem.on('keydown', '.input', function (event) {
+        // handler for all keystrokes in token divs
+        elem.on('keydown', '.token', function (event) {
             var elem = $(this);
             var key = _normalizeKey(event);
             _keyDown(elem, options, event, key);
         });
 
-        // handler for clicking on input divs
-        elem.on('click', '.input', function (event) {
+        // handler for clicking on token divs
+        elem.on('click', '.token', function (event) {
             var elem = $(this);
             if (elem.data('type') === 'fn') {
                 var options = _getOptions(elem)
@@ -274,7 +314,7 @@
             // create new div
             var tabIndex = parseInt(elem.attr('tabindex')) + 1;
             //var className = elem.hasClass('operator') ? 'value' : 'operator';
-            $('<div class="input" tabindex="' + tabIndex + '"></div>').appendTo(elem.parent());
+            $('<div class="token" tabindex="' + tabIndex + '"></div>').appendTo(elem.parent());
         }
         return elem.next().focus();
     }
@@ -347,7 +387,7 @@
                 event.preventDefault();
                 return;
             }
-
+            
             if (_tests.functions.test(key)) {
                 // open functions
                 event.preventDefault();
@@ -408,7 +448,7 @@
             $(html.join('')).prependTo(options.container);
         }
         // show the list
-        options.container.find('.function-list').data('initiator', elem).css({'top':elem.offset().top + elem.height() + 10, 'left':elem.offset().left}).fadeIn();
+        options.container.find('.function-list').data('initiator', elem).css({ 'top': elem.position().top + elem.height() + 10, 'left': elem.position().left }).fadeIn();
     }
 
     var _showFunctionEditor = function (elem, fn, options) {
@@ -423,7 +463,7 @@
         var data = elem.data('functiondata') ? elem.data('functiondata') : {};
         fn.edit(canvas, options.functionHelper, data);
         // show the list
-        editor.css({'top':elem.offset().top + elem.height() + 10, 'left':elem.offset().left}).fadeIn();
+        editor.css({'top':elem.position().top + elem.height() + 10, 'left':elem.position().left}).fadeIn();
     }
 
     var _closeFunctionEditor = function (options) {
@@ -520,7 +560,34 @@
             // Establish our default settings
             var opt = $.extend({
                 fields: [],
-                items: [],
+                expression: {},
+                    /*
+                    tokens:[{  
+                        type: 'literal',
+                        value: '1'
+                    }, {
+                        type: 'literal',
+                        value: '+'
+                    }, {
+                        type: 'field',
+                        fieldId: 'AccountNumber',
+                        value: 'Account Number'
+                    }, {
+                        type: 'literal',
+                        value: '+'
+                    }, {
+                        type: 'fn',
+                        name: 'Left',
+                        data: {
+                            fieldId: 'AccountNumber',
+                            numChars: 3
+                        }
+                    }],
+                    formula: 'function () {}', 
+                    text: '1 + model.AccountNummber + Left(Account Number, 3)'
+                    },
+
+                */  
                 onChange: null
             }, options);
 
@@ -541,25 +608,66 @@
 
         getExpression: function (modelName) {
             var options = _getOptions($(this));
-            var exp = [];
-            $.each($(this).find('.input'), function (index, item) {
+            var tokens = [];
+            var formula = [];
+            var text = [];
+
+            $.each($(this).find('.token'), function (index, item) {
                 //debugger;
                 var elem = $(item);
-                if (exp.length > 0) {
-                    exp.push(' ');
-                }
-                if (elem.data('type') === 'field') {
-                    var field = _getFieldById(options, elem.data('fieldid'));
-                    exp.push(modelName + '.' + field.id);
-                } else if (elem.data('type') === 'fn') {
-                    var fn = _getFunctionByName(elem.data('name'));
-                    exp.push('function(){', fn.toFunction(modelName, options.functionHelper, elem.data('functiondata')), '}()');
+
+
+                if (tokens.length === 0) {
+                    formula.push('(');
+                    text.push('(');
                 } else {
-                    exp.push($(elem).html())
+                    formula.push(' ');
+                    text.push(' ');
                 }
+
+
+                if (elem.data('type') === 'field') {
+                    // this is a field
+                    var field = _getFieldById(options, elem.data('fieldid'));
+                    tokens.push({
+                        type: 'field',
+                        fieldId: elem.data('fieldid'),
+                        value: elem.text()
+                    });
+                    formula.push(modelName + '.' + field.id);
+                    
+
+                } else if (elem.data('type') === 'fn') {
+                    // this is a fuction
+                    var fn = _getFunctionByName(elem.data('name'));
+                    tokens.push({
+                        type: 'fn',
+                        name: fn.name,
+                        data: elem.data('functiondata')
+                    });
+                    formula.push('function(){', fn.toFunction(modelName, options.functionHelper, elem.data('functiondata')), '}()');
+
+                } else {
+                    // straight literal
+                    tokens.push({
+                        type: 'literal',
+                        value: elem.text()
+                    });
+                    formula.push($(elem).text())
+                }
+
+                // add to english text
+                text.push(elem.text());
+
             });
-            var formula = exp.join('');
-            return formula;
+            formula.push(')');
+            text.push(')');
+
+            return {
+                tokens: tokens,
+                formula: formula.join(''),
+                text: text.join('')
+            };;
         }
     };
 
@@ -578,5 +686,73 @@
     // define functions in exp.functions.js
     // custom functions can be added by adding to this array by the client
     $.fn.jsbExp.functions = [];
+
+    $.fn.jsbExp.build = function (data) {
+
+        var formula = [];
+        var text = [];
+
+        var findField = function(fieldId) {
+            var field = {};
+            $.each(data.fields, function(index, item) {
+                if (item.id === fieldId) {
+                    field = item;
+                    return false;
+                }
+            });
+            return field;
+        }
+        var findFunction = function (name) {
+            var fn = {};
+            $.each($.fn.jsbExp.functions, function(index, item) {
+                if (item.name === name) {
+                    fn = item;
+                    return false;
+                }
+            });
+            return fn;
+        }
+        // TODO - if a function needs this, it's not completely there!
+        var functionHelper = {
+            getFieldById: findField
+        };
+
+        $.each(data.tokens, function (index, token) {
+            
+            if (formula.length === 0) {
+                formula.push('(');
+                text.push('(');
+            } else {
+                formula.push(' ');
+                text.push(' ');
+            }
+
+            if (token.type === 'field') {
+                // this is a field
+                var field = findField(token.fieldId);
+                formula.push(data.modelName + '.' + field.id);
+                text.push(field.name);
+
+            } else if (token.type === 'fn') {
+                // this is a fuction
+                var fn = findFunction(token.name);
+                formula.push('function(){', fn.toFunction(data.modelName, functionHelper, token.data), '}()');
+                var tempElem = $('<div></div>');
+                text.push(fn.render(tempElem, functionHelper, token.data));
+            } else {
+                // straight literal
+                formula.push(token.value);
+                text.push(token.value);
+            }
+
+        });
+        formula.push(')');
+        text.push(')');
+
+        return {
+            formula: formula.join(''),
+            text: text.join('')
+        };;
+    }
 
 }(jQuery));

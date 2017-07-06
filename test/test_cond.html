@@ -5,30 +5,50 @@
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
 
     <link rel="stylesheet" href="..\cond.css" />
+    <link rel="stylesheet" href="..\exp.css" />
 
     <style type="text/css">
-        bodyz {
-            font-size: 18px;
-            padding: 15px;
-            font-family: sans-serif;
+        #canvas {
+            padding-top: 15px;
+        }
+
+        .key {
+            font-style: italic;
+            /*color: #5cb85c;*/
+            font-weight: bold;
+        }
+
+        .expression-helper {
+            border: solid 1px #eeeeee;
+        }
+
+        .expression-helper td {
+            padding: 10px;
+        }
+        .expression-helper td:first-child {
+            background-color: #eeeeee;
         }
     </style>
 
     <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
 
-
+    <script type="text/javascript" src="..\jsb.util.js"></script>
     <script type="text/javascript" src="..\cond.js"></script>
-    <script type="text/javascript" src="model.js"></script>
+    <script type="text/javascript" src="..\exp.js"></script>
+    <script type="text/javascript" src="..\exp.fn.string.left.js"></script>
+    <script type="text/javascript" src="..\exp.fn.date.today.js"></script>
+    <script type="text/javascript" src="helper.js"></script>
     <script type="text/javascript">
 
         function evalExpression() {
-            var formula = $('#canvas').jsbCond('getExpression', 'model');
-            $('#result1').html(formula);
-            if (formula) {
+            //debugger;
+            var cond = $('#canvas').jsbCond('getCondition', 'model');
+            $('#result1').html(cond.formula);
+            if (cond.formula) {
                 try {
                     var result;
-                    eval('result = ' + formula);
+                    eval('result = ' + cond.formula);
                     $('#result2').html(result.toString());
                 } catch (e) {
                     $('#result2').html(e);
@@ -41,49 +61,27 @@
 	    $(document).ready(function(){
 
 		    $('#canvas').jsbCond({
-			    fields: [{
-				    id: 'AccountNumber', 
-				    name: 'Account Number', 
-				    type: 'string'
-			    },{
-				    id: 'ClosingDate', 
-				    name: 'Closing Date', 
-				    type: 'date'
-			    },{
-				    id: 'RequestedAmount',
-				    name: 'Requested Amount',
-				    type: 'money'
-			    },{
-				    id: 'SubProductId',
-				    name: 'Sub Product',
-				    type: 'integer', 
-				    values: [{
-					    value: 1,
-					    display: 'Credit Card'
-				    },{
-					    value: 2,
-					    display: 'Auto Loan'
-				    }]
-			    }],
-			    rulesx: [{
-				    condition: 'and',
-				    field: 'RequestedAmount', 
-				    relation: 'GTEQ', 
-				    value: 50000
-			    },{
-				    condition: 'and',
-				    field: 'SubProductId', 
-				    relation: 'EQ', 
-				    value: 2
-			    }],
-
+			    fields: fields,
 			    rules: [{
 				    condition: 'and', 
 				    rules: [{
 					    condition: 'and',
 					    field: 'RequestedAmount', 
 					    relation: 'GTEQ', 
-					    value: 50000
+					    value: '(10000 + Term)',
+					    valueExp: {
+					        tokens: [{
+					            type: 'literal',
+					            value: '10000'
+					        }, {
+					            type: 'literal',
+					            value: '+'
+					        }, {
+					            type: 'field',
+					            fieldId: 'Term',
+                                value: 'Term'
+					        }]
+					    }
 				    },{
 					    condition: 'and',
 					    field: 'SubProductId', 
@@ -96,7 +94,31 @@
 					    condition: 'and',
 					    field: 'RequestedAmount', 
 					    relation: 'GTEQ', 
-					    value: 10000
+					    value: '(250 * (3 + 2))',
+					    valueExp: {
+					        tokens: [{
+					            type: 'literal',
+                                value: '250'
+					        }, {
+					            type: 'literal',
+                                value: '*'
+					        }, {
+					            type: 'literal',
+					            value: '('
+					        }, {
+					            type: 'literal',
+					            value: '3'
+					        }, {
+					            type: 'literal',
+					            value: '+'
+					        }, {
+					            type: 'literal',
+					            value: '2'
+					        }, {
+					            type: 'literal',
+					            value: ')'
+					        }]
+					    }
 				    },{
 					    condition: 'and',
 					    field: 'SubProductId', 
@@ -121,14 +143,34 @@
         <div id="canvas"></div>
 
         <br />
+        <hr />
         <label>Result: </label><div id="result2"></div>
-        <hr>
+        <br/>
+        <div>
+            <table class="expression-helper">
+                <tr>
+                    <td>
+                        Expression help
+                    </td>
+                    <td>
+                        <div>Use <span class="key">tab, shift-tab, arrows, mouse to navigate</span> </div>
+                        <div><span class="key">backspace</span> resets an element</div>
+                        <div>The "<span class="key">=</span>" key shows the field/function menu</div>
+                    </td>
+                </tr>
+            </table>
+
+        </div>
+        <br/>
         <label>Formula: </label><div id="result1"></div>
         <hr>
         <div><label>Account Number:</label> <input type="text" id="txtAccountNumber" class="form-control" /></div>
+        <div><label>Birth Date:</label> <input type="date" id="txtBirthDate" class="form-control" /></div>
         <div><label>Closing Date:</label> <input type="date" id="txtClosingDate" class="form-control" /></div>
+        <div><label>Name:</label> <input type="text" id="txtName" class="form-control" /></div>
         <div><label>Requested Amount:</label> <input type="number" id="txtRequestedAmount" class="form-control" /></div>
         <div><label>Sub Product:</label> <select id="ddlSubProductId" class="form-control"><option value="1">Credit Card</option><option value="2">Auto Loan</option></select></div>
+        <div><label>Term:</label> <input type="number" id="txtTerm" class="form-control" /></div>
     </div>
 </body>	
 
